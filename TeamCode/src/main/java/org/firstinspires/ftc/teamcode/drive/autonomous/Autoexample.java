@@ -95,7 +95,7 @@ public class Autoexample extends LinearOpMode {
         drive.setPoseEstimate(start);
 
         telemetry.setMsTransmissionInterval(50);
-        robot.initHW();
+        robot.init();
         /*
 
          * The INIT-loop:

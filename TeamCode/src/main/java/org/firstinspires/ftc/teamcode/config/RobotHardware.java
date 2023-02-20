@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.config;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -38,6 +40,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 
 /**
@@ -60,7 +63,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  */
 @Config
 public class RobotHardware {
-
+    public SampleMecanumDrive drive;
     /* Declare OpMode members. */
     private LinearOpMode myOpMode = null;   // gain access to methods in the calling OpMode.
 
@@ -69,7 +72,7 @@ public class RobotHardware {
     public DcMotorEx LB   = null; //left back(chassis)
     public DcMotorEx RF  = null; //right front(chassis)
     public DcMotorEx RB  = null; //right back(chassis)
-    public DcMotorEx RTL = null; //right motor(lift)
+    public static DcMotorEx RTL = null; //right motor(lift)
     public DcMotorEx LTL = null; //left motor(lift)
     public Servo claw = null; //claw
     public DistanceSensor sensor = null;
@@ -92,21 +95,21 @@ public class RobotHardware {
     public static double  targetPosition = 550;
     private double initalTime = System.currentTimeMillis();
 
-    public double integralSum = 0;
-    public double lastError = 0;
-    public double derivative;
-
-    public static double p = 0.0005;
-    public static double i = 0;
-    public static double d = 0;
-
     public static  double strafeV = 4;
     public static  double foward1 = 41.5;
     public static  double vectorx1= -22;
     public static  double vectory1= 15.5;
-    ElapsedTime timer = new ElapsedTime();
     //    Thread liftPID = new Thread(new RobotHardware());
     public double initialTime = System.currentTimeMillis();
+
+//    public double integralSum = 0;
+//    public double lastError = 0;
+//    public double derivative = 0;
+//    ElapsedTime timer = new ElapsedTime();
+//
+//    public static double p = 0.0005;
+//    public static double i = 0;
+//    public static double d = 0;
 
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
@@ -116,7 +119,8 @@ public class RobotHardware {
     public RobotHardware() {}
 
 
-    public void initHW() {
+    public void init() {
+        drive = new SampleMecanumDrive(hardwareMap);
         //INITIALIZE ALL HARDWARE
         LF  = myOpMode.hardwareMap.get(DcMotorEx.class, "LF");
         LB = myOpMode.hardwareMap.get(DcMotorEx.class, "LB");
@@ -193,27 +197,28 @@ public class RobotHardware {
         LTL.setPower(power);
     }
 
-    public double PIDControl(double reference, double state) {
-        double Kp = p;
-        double Ki = i;
-        double Kd = d;
-
-        double error = reference - state;
-        integralSum += error * timer.seconds();
-        double derivative = (error - lastError) / timer.seconds();
-        lastError = error;
-        timer.reset();
-
-        double output = (error * Kp) + (derivative * Kd) + (integralSum * Ki);
-        return output;
-    }
-
     public void reset() {
         RTL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         LTL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         RTL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LTL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+//    public double PIDControl(double reference, double state) {
+//        double error = reference - state;
+//        integralSum += error * timer.seconds();
+//        double derivative = (error - lastError) / timer.seconds();
+//        lastError = error;
+//        timer.reset();
+//
+//        double output = (error * p) + (integralSum * i) + (derivative * d);
+//        return output;
+//    }
+
+
+    public boolean modeNameContains(String str) {
+        return getClass().getName().contains(str);
     }
 }
 
