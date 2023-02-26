@@ -15,6 +15,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
 AUTO NAMING CONVENTION:
@@ -49,6 +50,7 @@ public abstract class Auto extends RobotHardware {
     private final boolean BLUE_ALLIANCE_RIGHT = modeNameContains("BS") && SAME_COLOR_TERMINAL;
     private final boolean BLUE_ALLIANCE_LEFT = !BLUE_ALLIANCE_RIGHT;
     private final int CYCLE_COUNT = (CYCLE) ? 5 : 0;
+    private final double[] stack = {0.45, 0.35, 0.25, 0.15, 0.05};
 
     //FIRST QUADRANT coordinates aka BLUE SUB, RED TERMINAL
 
@@ -153,7 +155,6 @@ public abstract class Auto extends RobotHardware {
 //            }
 
             parkingLocation = currentDetections.get(0).toString();
-
             //telemetry.addData("\nTag of Interest", tagOfInterest.id);
             telemetry.addData("Parking location", parkingLocation);
             telemetry.update();
@@ -165,21 +166,27 @@ public abstract class Auto extends RobotHardware {
             TrajectorySequence preload;
             if (CYCLE_HIGH_CLOSE) {
                 preload = drive.trajectorySequenceBuilder(startPose)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); })
                         .lineToLinearHeading(centerHighPose)
-                        .waitSeconds(0.5)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
+                        .waitSeconds(0.4)
                         .build();
             } else if (CYCLE_MID) {
                 preload = drive.trajectorySequenceBuilder(startPose)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(MID_JUNC); })
                         .lineToLinearHeading(midPose)
-                        .waitSeconds(0.5)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
+                        .waitSeconds(0.4)
                         .build();
             } else {
                 Pose2d temp = new Pose2d(0, 48, 0);
                 Pose2d tempPose = (RED_ALLIANCE_LEFT || RED_ALLIANCE_RIGHT) ? farHighPose.minus(temp) : farHighPose.plus(temp);
                 preload = drive.trajectorySequenceBuilder(startPose)
                         .splineToConstantHeading(tempPose.vec(), tempPose.getHeading())
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); })
                         .lineToLinearHeading(farHighPose)
-                        .waitSeconds(0.5)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
+                        .waitSeconds(0.4)
                         .build();
             }
 
@@ -193,29 +200,45 @@ public abstract class Auto extends RobotHardware {
     public void cycle() {
         if (CYCLE) {
             TrajectorySequence cycle;
+            AtomicInteger x = new AtomicInteger();
             if (CYCLE_HIGH_CLOSE) {
                 cycle = drive.trajectorySequenceBuilder(preloadEnd)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(BOTTOM); virtualSetPos(stack[x.intValue()]);})
                         .lineToLinearHeading(stackPose)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(1); })
                         .waitSeconds(0.4)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); virtualSetPos(1); x.getAndIncrement();})
                         .lineToLinearHeading(preloadEnd)
+                        .waitSeconds(0.4)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
                         .build();
             } else if (CYCLE_MID) {
                 Pose2d temp = new Pose2d(0, 24, Math.toRadians(-90));
                 Pose2d tempPose = (RED_ALLIANCE_LEFT || RED_ALLIANCE_RIGHT) ? preloadEnd.plus(temp) : preloadEnd.minus(temp);
                 cycle = drive.trajectorySequenceBuilder(preloadEnd)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(BOTTOM); virtualSetPos(stack[x.intValue()]);})
                         .lineToLinearHeading(tempPose)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(1); })
                         .lineToLinearHeading(stackPose)
                         .waitSeconds(0.4)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(MID_JUNC); virtualSetPos(1); x.getAndIncrement();})
                         .lineToLinearHeading(tempPose)
+                        .waitSeconds(0.4)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
                         .build();
             } else {
                 Pose2d temp = new Pose2d(0, 24, Math.toRadians(-90));
                 Pose2d tempPose = (RED_ALLIANCE_LEFT || RED_ALLIANCE_RIGHT) ? preloadEnd.plus(temp) : preloadEnd.minus(temp);
                 cycle = drive.trajectorySequenceBuilder(preloadEnd)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(BOTTOM); virtualSetPos(stack[x.intValue()]);})
                         .lineToLinearHeading(tempPose)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(1); })
                         .lineToLinearHeading(stackPose)
                         .waitSeconds(0.4)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); virtualSetPos(1); x.getAndIncrement();})
                         .lineToLinearHeading(tempPose)
+                        .waitSeconds(0.4)
+                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
                         .build();
             }
 
@@ -245,6 +268,9 @@ public abstract class Auto extends RobotHardware {
                     .lineToLinearHeading(leftTOI)
                     .build();
         }
+
+        liftTo(BOTTOM);
+        drive.followTrajectorySequence(park);
     }
 
     public Pose2d reflectOverX(Pose2d pose) {

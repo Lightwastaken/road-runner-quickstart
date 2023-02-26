@@ -17,20 +17,21 @@ public class LiftPID extends RobotHardware {
     public double derivative = 0;
     ElapsedTime timer = new ElapsedTime();
 
-    public static double p = 0.0005;
+    public static double p = 0;
     public static double i = 0;
     public static double d = 0;
+    public static double f = 0;
     public static double state = RTL.getCurrentPosition();
     public static double reference = 0;
 
     public void loop() {
         double error = reference - state;
         integralSum += error * timer.seconds();
-        double derivative = (error - lastError) / timer.seconds();
+        derivative = (error - lastError) / timer.seconds();
         lastError = error;
         timer.reset();
 
-        double output = (error * p) + (integralSum * i) + (derivative * d);
+        double output = (error * p) + (integralSum * i) + (derivative * d) + (Math.cos(Math.toRadians(384.5/360)) * f);
 
         lift(output);
 
@@ -38,5 +39,4 @@ public class LiftPID extends RobotHardware {
         telemetry.addData("Target", reference);
         telemetry.update();
     }
-
 }

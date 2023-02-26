@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -65,26 +66,34 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 public class RobotHardware {
     public SampleMecanumDrive drive;
     /* Declare OpMode members. */
-    private LinearOpMode myOpMode = null;   // gain access to methods in the calling OpMode.
+    private LinearOpMode myOpMode;   // gain access to methods in the calling OpMode.
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    public DcMotorEx LF   = null; //left front(chassis)
-    public DcMotorEx LB   = null; //left back(chassis)
-    public DcMotorEx RF  = null; //right front(chassis)
-    public DcMotorEx RB  = null; //right back(chassis)
-    public static DcMotorEx RTL = null; //right motor(lift)
-    public DcMotorEx LTL = null; //left motor(lift)
-    public Servo claw = null; //claw
-    public DistanceSensor sensor = null;
+    public DcMotorEx LF; //left front(chassis)
+    public DcMotorEx LB; //left back(chassis)
+    public DcMotorEx RF; //right front(chassis)
+    public DcMotorEx RB; //right back(chassis)
+    public static DcMotorEx RTL; //right motor(lift)
+    public DcMotorEx LTL; //left motor(lift)
+    public Servo claw; //claw
+    public DistanceSensor sensor;
+    public ServoImplEx v4bLeft;
+    public ServoImplEx v4bRight;
+
 
     public ElapsedTime runtime = new ElapsedTime();
     public Orientation lastAngles = new Orientation();
     public double currAngle = 0.0;
-    public static  double GROUND_OUTTAKE_POSITION = 200;
-    public static  double BOTTOM_OUTTAKE_POSITION = 0;
-    public static  double LOW_OUTTAKE_POSITION = 550;
-    public static  double MID_OUTTAKE_POSITION = 900;
-    public static  double TOP_OUTTAKE_POSITION = 1230;
+//    public static  double GROUND_OUTTAKE_POSITION = 200;
+//    public static  double BOTTOM_OUTTAKE_POSITION = 0;
+//    public static  double LOW_OUTTAKE_POSITION = 550;
+//    public static  double MID_OUTTAKE_POSITION = 900;
+//    public static  double TOP_OUTTAKE_POSITION = 1230;
+    public static final int BOTTOM = 0;
+    public static final int GROUND_JUNC = 49;
+    public static final int LOW_JUNC = 1100;
+    public static final int MID_JUNC = 1955;
+    public static final int HIGH_JUNC = 2770;
     public static final double OUTTAKE_SPEED = 30 * 5281.1 / 60; //RPM * ENCODER TICKS PER REV / 60
     static final double COUNTS_PER_MOTOR_REV = 5281.1;    // eg: TETRIX Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 1.0;     // This is < 1.0 if geared UP
@@ -102,14 +111,14 @@ public class RobotHardware {
     //    Thread liftPID = new Thread(new RobotHardware());
     public double initialTime = System.currentTimeMillis();
 
-//    public double integralSum = 0;
-//    public double lastError = 0;
-//    public double derivative = 0;
-//    ElapsedTime timer = new ElapsedTime();
-//
-//    public static double p = 0.0005;
-//    public static double i = 0;
-//    public static double d = 0;
+    public double integralSum = 0;
+    public double lastError = 0;
+    public double derivative = 0;
+    ElapsedTime timer = new ElapsedTime();
+
+    public static double p = 0;
+    public static double i = 0;
+    public static double d = 0;
 
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
@@ -129,6 +138,8 @@ public class RobotHardware {
         RTL = myOpMode.hardwareMap.get(DcMotorEx.class, "RTL");
         LTL = myOpMode.hardwareMap.get(DcMotorEx.class, "LTL");
         claw = myOpMode.hardwareMap.get(Servo.class, "CLAW");
+        v4bLeft = myOpMode.hardwareMap.get(ServoImplEx.class, "V4B LEFT");
+        v4bRight = myOpMode.hardwareMap.get(ServoImplEx.class, "V4B RIGHT");
 //        sensor = myOpMode.hardwareMap.get(DistanceSensor.class, "distance sensor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -173,13 +184,6 @@ public class RobotHardware {
 
         // Send telemetry message to signify robot waiting;
     }
-    public void setMotorPowers(double LFP, double LBP, double RFP, double RBP) {
-        // Output the values to the motor drives.
-        LF.setPower(LFP);
-        LB.setPower(LBP);
-        RF.setPower(RFP);
-        RB.setPower(RBP);
-    }
 
     public void setMotorPowers(double speed) {
         // Output the values to the motor drives.
@@ -192,6 +196,7 @@ public class RobotHardware {
     public boolean isChassisVeloZero() {
         return LF.getVelocity() == 0 && LB.getVelocity() == 0 && RF.getVelocity() == 0 && RB.getVelocity() == 0;
     }
+
     public void lift(double power){
         RTL.setPower(power);
         LTL.setPower(power);
@@ -205,17 +210,39 @@ public class RobotHardware {
         LTL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-//    public double PIDControl(double reference, double state) {
-//        double error = reference - state;
-//        integralSum += error * timer.seconds();
-//        double derivative = (error - lastError) / timer.seconds();
-//        lastError = error;
-//        timer.reset();
-//
-//        double output = (error * p) + (integralSum * i) + (derivative * d);
-//        return output;
-//    }
+    public void PIDControl(double reference, double state) {
+        double error = reference - state;
+        integralSum += error * timer.seconds();
+        double derivative = (error - lastError) / timer.seconds();
+        lastError = error;
+        timer.reset();
 
+        double output = (error * p) + (integralSum * i) + (derivative * d);
+
+        RTL.setVelocity(output);
+        LTL.setVelocity(output);
+    }
+
+    public void liftTo(int pos) {
+        RTL.setTargetPosition(pos);
+        LTL.setTargetPosition(pos);
+
+        RTL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LTL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while (RTL.getCurrentPosition() < pos) {
+            PIDControl(pos, RTL.getCurrentPosition());
+        }
+
+        RTL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LTL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+    }
+
+    public void virtualSetPos(double pos) {
+        v4bRight.setPosition(pos);
+        v4bLeft.setPosition(pos);
+    }
 
     public boolean modeNameContains(String str) {
         return getClass().getName().contains(str);
