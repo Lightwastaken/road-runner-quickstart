@@ -5,6 +5,7 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.lin
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.config.RobotHardware;
 import org.firstinspires.ftc.teamcode.config.vision.AprilTagDetectionPipeline;
@@ -24,7 +25,7 @@ AUTO NAMING CONVENTION:
    EX: RED TERMINAL RED SUBSTATION: RTBS
 2) cycle or park?
     if CYCLE: add "Cycle"
-    if PARK: add "Park"
+    if PARK ONLY: don't add anything
 3) which pole to cycle to
     high junction closest to cone stack: "CenterHigh"
     mid junction: "Mid"
@@ -51,6 +52,7 @@ public abstract class Auto extends RobotHardware {
     private final boolean BLUE_ALLIANCE_LEFT = !BLUE_ALLIANCE_RIGHT;
     private final int CYCLE_COUNT = (CYCLE) ? 5 : 0;
     private final double[] stack = {0.45, 0.35, 0.25, 0.15, 0.05};
+    private ArrayList<String> tasks;
 
     //FIRST QUADRANT coordinates aka BLUE SUB, RED TERMINAL
 
@@ -116,6 +118,20 @@ public abstract class Auto extends RobotHardware {
         }
 
         drive.setPoseEstimate(startPose);
+
+        tasks = new ArrayList<String>();
+        tasks.add("initialize hardware, ");
+
+        if (CYCLE) {
+            tasks.add("deliver preload, ");
+            if (modeNameContains("mid")) {
+                tasks.add("cycle mid junction, ");
+            } else {
+                tasks.add("cycle high junction, ");
+            }
+        }
+
+        tasks.add("park robot");
     }
 
     //AUTO PATH
@@ -143,22 +159,24 @@ public abstract class Auto extends RobotHardware {
             public void onError(int errorCode) {}
         });
 
-        while (!linearOpMode.isStarted() && !linearOpMode.isStopRequested()) {
-            ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
-            String parkingLocation = "Tag not found";
-//            for(AprilTagDetection tag : currentDetections) {
-//                if(tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT) {
-//                    tagOfInterest = tag;
-//                    parkingLocation = tag.toString();
-//                    break;
-//                }
-//            }
+        ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
+        String parkingLocation = "Tag not found";
 
-            parkingLocation = currentDetections.get(0).toString();
-            //telemetry.addData("\nTag of Interest", tagOfInterest.id);
-            telemetry.addData("Parking location", parkingLocation);
-            telemetry.update();
+        while (!linearOpMode.isStarted() && !linearOpMode.isStopRequested()) {
+            for(AprilTagDetection tag : currentDetections) {
+                if(tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT) {
+                    tagOfInterest = tag;
+                    parkingLocation = currentDetections.get(0).toString();
+                    break;
+                }
+            }
         }
+
+        //telemetry.addData("\nTag of Interest", tagOfInterest.id);
+        telemetry.addData("\nParking location", parkingLocation);
+        telemetry.addLine("--------------");
+        telemetry.addData("Auto queue", queue());
+        telemetry.update();
     }
 
     public void preload() {
@@ -166,14 +184,14 @@ public abstract class Auto extends RobotHardware {
             TrajectorySequence preload;
             if (CYCLE_HIGH_CLOSE) {
                 preload = drive.trajectorySequenceBuilder(startPose)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); })
+                        .UNSTABLE_addTemporalMarkerOffset(1, () -> { liftTo(HIGH_JUNC); })
                         .lineToLinearHeading(centerHighPose)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
                         .waitSeconds(0.4)
                         .build();
             } else if (CYCLE_MID) {
                 preload = drive.trajectorySequenceBuilder(startPose)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(MID_JUNC); })
+                        .UNSTABLE_addTemporalMarkerOffset(1, () -> { liftTo(MID_JUNC); })
                         .lineToLinearHeading(midPose)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
                         .waitSeconds(0.4)
@@ -183,7 +201,7 @@ public abstract class Auto extends RobotHardware {
                 Pose2d tempPose = (RED_ALLIANCE_LEFT || RED_ALLIANCE_RIGHT) ? farHighPose.minus(temp) : farHighPose.plus(temp);
                 preload = drive.trajectorySequenceBuilder(startPose)
                         .splineToConstantHeading(tempPose.vec(), tempPose.getHeading())
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); })
+                        .UNSTABLE_addTemporalMarkerOffset(1, () -> { liftTo(HIGH_JUNC); })
                         .lineToLinearHeading(farHighPose)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
                         .waitSeconds(0.4)
@@ -269,22 +287,46 @@ public abstract class Auto extends RobotHardware {
                     .build();
         }
 
+        if (!CYCLE) {
+            if (tagOfInterest.id == 2) {
+                park = drive.trajectorySequenceBuilder(startPose)
+                        .forward(36)
+                        .build();
+            } else if (tagOfInterest.id == 3) {
+                park = drive.trajectorySequenceBuilder(startPose)
+                        .forward(24)
+                        .strafeRight(26)
+                        .forward(6)
+                        .turn(Math.toRadians(180))
+                        .build();
+            } else {
+                park = drive.trajectorySequenceBuilder(startPose)
+                        .forward(24)
+                        .strafeLeft(25)
+                        .forward(6)
+                        .turn(Math.toRadians(180))
+                        .build();
+            }
+        }
+
         liftTo(BOTTOM);
         drive.followTrajectorySequence(park);
+    }
+
+    public String queue() {
+        return tasks.toString();
     }
 
     public Pose2d reflectOverX(Pose2d pose) {
         double newY = -1 * pose.getY();
         double newHeading = -1 * pose.getHeading();
-        pose = new Pose2d(pose.getX(), newY, newHeading);
-        return pose;
+        return new Pose2d(pose.getX(), newY, newHeading);
     }
 
     public Pose2d reflectOverY(Pose2d pose) {
         double newX = -1 * pose.getX();
         double newHeading = Math.PI - pose.getHeading();
-        pose = new Pose2d(newX, pose.getY(), newHeading);
-        return pose;
+        return new Pose2d(newX, pose.getY(), newHeading);
     }
 
     public Pose2d reflectOverXY(Pose2d pose) {
