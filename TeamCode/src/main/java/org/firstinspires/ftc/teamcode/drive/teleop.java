@@ -32,7 +32,7 @@ public class teleop extends LinearOpMode {
         /* Initialize the hardware variables.
          * The init() method of the hardware class does all the work here
          */
-        robot.init();
+        robot.initHW();
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Say", "Hello Driver");
         telemetry.update();
@@ -100,6 +100,20 @@ public class teleop extends LinearOpMode {
 //                robot.lift(0);
 //            }
 
+            //x = open
+            //y = close
+            // right servo = L (close) R (open)
+            // left servo = R (close)
+            // NON TOGGLES
+            if (gamepad1.x) {
+                robot.virtualSetPos(0.5);
+            } else if (gamepad1.y) {
+                robot.virtualSetPos(-0.5);
+            } else if (gamepad1.a) {
+                robot.virtualSetPos(0);
+            }
+
+            // r = close, l = open
             if (gamepad1.left_stick_x > 0.5) {
                 robot.claw.setPosition(0.5);
             }else if (gamepad1.left_stick_x < -0.5) {
@@ -107,9 +121,9 @@ public class teleop extends LinearOpMode {
             }
 
             if (gamepad1.right_trigger > 0.1) {
-                robot.lift(0.3);
-            } else if (gamepad1.right_bumper) {
                 robot.lift(-0.3);
+            } else if (gamepad1.right_bumper) {
+                robot.lift(0.3);
             } else {
                 robot.lift(0);
             }

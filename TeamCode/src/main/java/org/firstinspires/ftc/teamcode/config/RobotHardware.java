@@ -33,6 +33,8 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.har
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -77,8 +79,8 @@ public class RobotHardware {
     public DcMotorEx LTL; //left motor(lift)
     public Servo claw; //claw
     public DistanceSensor sensor;
-    public ServoImplEx v4bLeft;
-    public ServoImplEx v4bRight;
+    public CRServoImplEx v4bLeft;
+    public CRServoImplEx v4bRight;
 
 
     public ElapsedTime runtime = new ElapsedTime();
@@ -128,8 +130,8 @@ public class RobotHardware {
     public RobotHardware() {}
 
 
-    public void init() {
-        drive = new SampleMecanumDrive(hardwareMap);
+    public void initHW() {
+        // drive remove cuz it doesnt work here
         //INITIALIZE ALL HARDWARE
         LF  = myOpMode.hardwareMap.get(DcMotorEx.class, "LF");
         LB = myOpMode.hardwareMap.get(DcMotorEx.class, "LB");
@@ -138,8 +140,8 @@ public class RobotHardware {
         RTL = myOpMode.hardwareMap.get(DcMotorEx.class, "RTL");
         LTL = myOpMode.hardwareMap.get(DcMotorEx.class, "LTL");
         claw = myOpMode.hardwareMap.get(Servo.class, "CLAW");
-        v4bLeft = myOpMode.hardwareMap.get(ServoImplEx.class, "V4B LEFT");
-        v4bRight = myOpMode.hardwareMap.get(ServoImplEx.class, "V4B RIGHT");
+        v4bLeft = myOpMode.hardwareMap.get(CRServoImplEx.class, "V4B LEFT");
+        v4bRight = myOpMode.hardwareMap.get(CRServoImplEx.class, "V4B RIGHT");
 //        sensor = myOpMode.hardwareMap.get(DistanceSensor.class, "distance sensor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -150,7 +152,7 @@ public class RobotHardware {
         RF.setDirection(DcMotor.Direction.REVERSE);
         RB.setDirection(DcMotor.Direction.REVERSE);
         RTL.setDirection(DcMotorEx.Direction.FORWARD);
-        LTL.setDirection(DcMotorEx.Direction.REVERSE);
+        LTL.setDirection(DcMotorEx.Direction.FORWARD);
 
         //ALL MOTORS RUN WITH ENCODERS
         LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -239,9 +241,9 @@ public class RobotHardware {
 
     }
 
-    public void virtualSetPos(double pos) {
-        v4bRight.setPosition(pos);
-        v4bLeft.setPosition(pos);
+    public void virtualSetPos(double l4b) {
+        v4bRight.setPower(l4b);
+        v4bLeft.setPower(-l4b);
     }
 
     public boolean modeNameContains(String str) {

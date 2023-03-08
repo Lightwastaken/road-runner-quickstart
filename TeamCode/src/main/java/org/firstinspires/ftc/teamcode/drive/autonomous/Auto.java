@@ -128,7 +128,7 @@ public abstract class Auto extends RobotHardware {
 
 
     public void initialize() {
-        init();
+        initHW();
         telemetry.addLine("Hardware initialized");
         telemetry.update();
 
