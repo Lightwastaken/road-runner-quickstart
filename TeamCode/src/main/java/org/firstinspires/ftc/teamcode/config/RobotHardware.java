@@ -114,6 +114,8 @@ public class RobotHardware {
     public double integralSum = 0;
     public double lastError = 0;
     public double derivative = 0;
+    public double integralSumLimit = 0.1;
+    private double lastReference;
     ElapsedTime timer = new ElapsedTime();
 
     public static double p = 0;
@@ -223,6 +225,9 @@ public class RobotHardware {
         LTL.setVelocity(output);
     }
 
+
+
+
     public void liftTo(int pos) {
         RTL.setTargetPosition(pos);
         LTL.setTargetPosition(pos);
@@ -230,7 +235,7 @@ public class RobotHardware {
         RTL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         LTL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while (RTL.getCurrentPosition() < pos) {
+        while (Math.abs(RTL.getCurrentPosition() + LTL.getCurrentPosition()/2 - pos) < 30) {
             PIDControl(pos, RTL.getCurrentPosition());
         }
 
@@ -242,6 +247,23 @@ public class RobotHardware {
     public void virtualSetPos(double pos) {
         v4bRight.setPosition(pos);
         v4bLeft.setPosition(pos);
+    }
+
+    public void Powerdown() {
+        double time1 = System.currentTimeMillis();
+        while (time1 - System.currentTimeMillis() < 2300) {
+            if (time1 - System.currentTimeMillis() <= 100) {
+                lift(0.1);
+            } else if (time1 - System.currentTimeMillis() >= 500) {
+                lift(0.09);
+            }else if (time1 - System.currentTimeMillis() >= 800) {
+                lift(0.07);
+            }else if (time1 - System.currentTimeMillis() >= 1000) {
+                lift(0.05);
+            } else if (time1 - System.currentTimeMillis() >= 1000) {
+                lift(0.03);
+            }
+        }
     }
 
     public boolean modeNameContains(String str) {
