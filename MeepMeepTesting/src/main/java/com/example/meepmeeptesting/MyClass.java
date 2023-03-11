@@ -15,16 +15,24 @@ public class MyClass {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(52.48180821614297, 52.48180821614297, Math.toRadians(180), Math.toRadians(180), 12)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(-33, 60.0, Math.toRadians(90)))
-                                .strafeLeft(2)
-                                .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
+                        drive.trajectorySequenceBuilder(new Pose2d(36, 60.0, Math.toRadians(90)))
+                                .back(48)
                                 // preload [ not implmented]
                                 .waitSeconds(0.5)
-                                .lineToLinearHeading(new Pose2d(-57, 12, Math.toRadians(180)))
-                                // goes to cone stack ^
-                                .waitSeconds(0.5)
-                                .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
-                                .waitSeconds(0.5)
+                                .turn(Math.toRadians(45))
+                                .forward(4)
+                                .UNSTABLE_addTemporalMarkerOffset(0, () -> { ; })
+                                .back(4)
+                                .turn(Math.toRadians(-135))
+                                .forward(25)
+                                .UNSTABLE_addTemporalMarkerOffset(0, () -> { ; })
+                                .waitSeconds(0.2)
+                                .back(25)
+                                .turn(Math.toRadians(135))
+                                .UNSTABLE_addTemporalMarkerOffset(0, () -> { ; })
+                                .forward(4)
+                                .back(4)
+                                .turn(Math.toRadians(-45))
                                 .build()
 
                 );
