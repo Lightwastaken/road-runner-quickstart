@@ -1,4 +1,6 @@
 package org.firstinspires.ftc.teamcode.derivedAutos;
-import org.firstinspires.ftc.teamcode.drive.autonomous.Auto;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+import org.firstinspires.ftc.teamcode.drive.autonomous.Auto;
+@Disabled
 public class RTRSCycleCenterHigh extends Auto {}

@@ -38,8 +38,8 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.ArrayList;
 
-
-@Autonomous(name="Blue terminal blue substation", group="Pushbot")
+@Disabled
+@Autonomous(name="Blue terminal blue substation park", group="Pushbot")
 public class BTBSParkOnly extends LinearOpMode {
     public static Pose2d preloadEnd;
     public static Pose2d cycleEnd;

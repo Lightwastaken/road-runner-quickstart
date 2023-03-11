@@ -186,7 +186,7 @@ public class BTBSCycleMid extends LinearOpMode {
 
         TrajectorySequence preloadDeliver = drive.trajectorySequenceBuilder(start)
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> {
-                    robot.claw.setPosition(1);
+                    robot.claw.setPosition(0.8);
                 })
                 .strafeLeft(2)
                 .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
@@ -247,7 +247,7 @@ public class BTBSCycleMid extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(-57, 12, Math.toRadians(180)))
                 // goes to cone stack ^
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.PIDControl(coneStack[stack.intValue()], robot.getLiftAvg()); })
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(1);; })
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.8);; })
                 // picks up stuff
                 .waitSeconds(0.5)
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
