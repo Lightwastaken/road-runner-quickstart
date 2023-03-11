@@ -180,7 +180,7 @@ public class BTBSParkOnly extends LinearOpMode {
         }
 
         TrajectorySequence preloadDeliver = drive.trajectorySequenceBuilder(start)
-                .strafeLeft(8)
+                .strafeLeft(5)
                 .back(50)
                 .build();
 
@@ -188,7 +188,7 @@ public class BTBSParkOnly extends LinearOpMode {
 
 
         TrajectorySequence leftTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .strafeRight(30)
+                .strafeRight(26)
                 .forward(5)
                 .build();
 
@@ -198,8 +198,8 @@ public class BTBSParkOnly extends LinearOpMode {
 
         TrajectorySequence rightTOI = drive.trajectorySequenceBuilder(preloadEnd)
                 .back(2)
-                .strafeLeft(34)
-                .forward(5)
+                .strafeLeft(26)
+                .forward(10)
                 .build();
 
 

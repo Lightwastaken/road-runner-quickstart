@@ -94,7 +94,7 @@ public class RobotHardware {
 //    public static  double MID_OUTTAKE_POSITION = 900;
 //    public static  double TOP_OUTTAKE_POSITION = 1230;
     public static final int BOTTOM = 0;
-    public static final int GROUND_JUNC = 49;
+    public static final int GROUND_JUNC = 300;
     public static final int LOW_JUNC = 975;
     public static final int MID_JUNC = 1900;
     public static final int HIGH_JUNC = 2635;

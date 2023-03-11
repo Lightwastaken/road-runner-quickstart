@@ -184,37 +184,38 @@ public class cramAutoBlue extends LinearOpMode {
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> {
                     robot.claw.setPosition(1);
                 })
+                .strafeLeft(4)
                 .back(48)
                 // preload [ not implmented]
                 .waitSeconds(0.5)
-                .turn(Math.toRadians(-45))
-                .forward(4)
+                .turn(Math.toRadians(-47.5))
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
+                .forward(8.5)
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.9); })
-                .waitSeconds(0.3)
-                .back(4)
+                .waitSeconds(0.8)
+                .back(8.5)
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.GROUND_JUNC, "L"); })
                 .waitSeconds(0.3)
-                .turn(Math.toRadians(135))
-                .forward(25)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(800, "CS1"); })
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(1); })
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
-                .waitSeconds(0.2)
-                .back(25)
-                .turn(Math.toRadians(-135))
-                .forward(4)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.9); })
-                .waitSeconds(0.3)
-                .back(4)
-                .turn(Math.toRadians(45))
+                .turn(Math.toRadians(47.5))
+//                .forward(25)
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(800, "CS1"); })
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(1); })
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
+//                .waitSeconds(0.2)
+//                .back(25)
+//                .turn(Math.toRadians(-135))
+//                .forward(4)
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.9); })
+//                .waitSeconds(0.3)
+//                .back(4)
+//                .turn(Math.toRadians(45))
                 .build();
 
         preloadEnd = preloadDeliver.end();
 
 
         TrajectorySequence leftTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .strafeLeft(19)
+                .strafeRight(23)
                 .build();
 
         TrajectorySequence middleTOI = drive.trajectorySequenceBuilder(preloadEnd)
@@ -224,7 +225,7 @@ public class cramAutoBlue extends LinearOpMode {
 
         TrajectorySequence rightTOI = drive.trajectorySequenceBuilder(preloadEnd)
                 .back(0.25)
-                .strafeRight(30)
+                .strafeLeft(30)
                 .build();
 
 
