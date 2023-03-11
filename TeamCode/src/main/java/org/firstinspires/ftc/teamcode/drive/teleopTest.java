@@ -8,8 +8,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.config.RobotHardware;
 
 
-@TeleOp(name="GILBYGOBRRR", group="Pushbot")
-public class teleop extends LinearOpMode {
+@TeleOp
+        (name="teleopTesto", group="Pushbot")
+public class teleopTest extends LinearOpMode {
 
     /* Declare OpMode members. */
     // Use a Pushbot's hardware
@@ -26,7 +27,7 @@ public class teleop extends LinearOpMode {
         final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                 (WHEEL_DIAMETER_INCHES * 3.1415);
 
-        double speedControl = 1;
+        double speedControl = 0.90;
         double initialTime = 0;
 
         /* Initialize the hardware variables.
@@ -62,6 +63,9 @@ public class teleop extends LinearOpMode {
             // This ensures all the powers maintain the same ratio, but only when
             // at least one is out of the range [-1, 1]
 
+            if (Math.abs(y) < (x * Math.sqrt(2))) {
+                y = 0;
+            }
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 0);
             double frontLeftPower = (y + x + rx) / denominator;
@@ -75,12 +79,17 @@ public class teleop extends LinearOpMode {
             robot.RB.setPower(backRightPower * speedControl);
 
             if (gamepad1.left_trigger > 0.1) {
-                speedControl = 1.0;
+                robot.RTL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.LTL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.RTL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                robot.LTL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             }
 
-            if (gamepad1.left_bumper) {
-                speedControl = 0.25;
+            if(gamepad1.left_bumper){
+                robot.lift(-0.35);
             }
+
+
 
 //            if (gamepad1.dpad_up) {
 //                robot.claw.setPosition(0.1);
@@ -106,15 +115,15 @@ public class teleop extends LinearOpMode {
 
             // r = close, l = open
             if (gamepad1.left_stick_x > 0.5) {
-                robot.claw.setPosition(0.70);
+                robot.claw.setPosition(0.5);
             }else if (gamepad1.left_stick_x < -0.5) {
                 robot.claw.setPosition(1);
             }
 
-            if (gamepad1.right_trigger > 0.1) {
-                robot.lift(0.7);
-            } else if (gamepad1.right_bumper) {
-                robot.lift(-0.7);
+            if (gamepad1.right_bumper) {
+                robot.PIDControl(robot.targetPosition,robot.getLiftAvg());
+            } else if (gamepad1.right_trigger > 0.1) {
+                robot.PIDControl(30,robot.getLiftAvg());
             } else {
                 robot.lift(0);
             }

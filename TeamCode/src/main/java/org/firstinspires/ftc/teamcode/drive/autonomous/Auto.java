@@ -221,11 +221,9 @@ public abstract class Auto extends RobotHardware {
             AtomicInteger x = new AtomicInteger();
             if (CYCLE_HIGH_CLOSE) {
                 cycle = drive.trajectorySequenceBuilder(preloadEnd)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(BOTTOM); virtualSetPos(stack[x.intValue()]);})
                         .lineToLinearHeading(stackPose)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(1); })
                         .waitSeconds(0.4)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); virtualSetPos(1); x.getAndIncrement();})
                         .lineToLinearHeading(preloadEnd)
                         .waitSeconds(0.4)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
@@ -234,12 +232,11 @@ public abstract class Auto extends RobotHardware {
                 Pose2d temp = new Pose2d(0, 24, Math.toRadians(-90));
                 Pose2d tempPose = (RED_ALLIANCE_LEFT || RED_ALLIANCE_RIGHT) ? preloadEnd.plus(temp) : preloadEnd.minus(temp);
                 cycle = drive.trajectorySequenceBuilder(preloadEnd)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(BOTTOM); virtualSetPos(stack[x.intValue()]);})
                         .lineToLinearHeading(tempPose)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(1); })
                         .lineToLinearHeading(stackPose)
                         .waitSeconds(0.4)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(MID_JUNC); virtualSetPos(1); x.getAndIncrement();})
+
                         .lineToLinearHeading(tempPose)
                         .waitSeconds(0.4)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
@@ -248,12 +245,11 @@ public abstract class Auto extends RobotHardware {
                 Pose2d temp = new Pose2d(0, 24, Math.toRadians(-90));
                 Pose2d tempPose = (RED_ALLIANCE_LEFT || RED_ALLIANCE_RIGHT) ? preloadEnd.plus(temp) : preloadEnd.minus(temp);
                 cycle = drive.trajectorySequenceBuilder(preloadEnd)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(BOTTOM); virtualSetPos(stack[x.intValue()]);})
                         .lineToLinearHeading(tempPose)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(1); })
                         .lineToLinearHeading(stackPose)
                         .waitSeconds(0.4)
-                        .UNSTABLE_addTemporalMarkerOffset(0, () -> { liftTo(HIGH_JUNC); virtualSetPos(1); x.getAndIncrement();})
+
                         .lineToLinearHeading(tempPose)
                         .waitSeconds(0.4)
                         .UNSTABLE_addTemporalMarkerOffset(0, () -> { claw.setPosition(0.1); })
