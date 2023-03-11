@@ -27,6 +27,7 @@ import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityCons
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.config.RobotHardware;
@@ -46,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BTBSCycleMid extends LinearOpMode {
     public static Pose2d preloadEnd;
     public static Pose2d cycleEnd;
-    int[] coneStack = {200, 160, 120, 80, 40};
+    int[] coneStack = {800, 750, 700, 650, 600};
 
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -186,37 +187,73 @@ public class BTBSCycleMid extends LinearOpMode {
 
         TrajectorySequence preloadDeliver = drive.trajectorySequenceBuilder(start)
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> {
-                    robot.claw.setPosition(0.8);
+                    robot.RTL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    robot.LTL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 })
-                .strafeLeft(2)
-                .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
+                .strafeLeft(5)
+                .lineToLinearHeading(new Pose2d(-36,13,Math.toRadians(24)))
                 .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0);})
-                .waitSeconds(0.4)
+                .forward(9.3)
+                .waitSeconds(0.25)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.9);})
+                .waitSeconds(0.15)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(1);})
+                .waitSeconds(0.1)
+                .back(7)
+                .turn(Math.toRadians(64))
+                .back(6)
                 // preload ^
+                .lineToLinearHeading(new Pose2d(-57, 9, Math.toRadians(180)))
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(coneStack[0], "CS1"); })
+                // goes to cone stack ^
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.9); })
+                .forward(6)
+                .waitSeconds(0.3)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(1); })
+                // picks up stuff
+                .waitSeconds(0.2)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(1000, "M"); })
+                .waitSeconds(0.2)
+                .back(38.5)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
+                .turn(Math.toRadians(-90))
+                .forward(7)
+                .waitSeconds(0.1)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.9); })
+                .waitSeconds(0.2)
+                .back(4)
                 .build();
 
         preloadEnd = preloadDeliver.end();
 
 
         TrajectorySequence leftTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .strafeLeft(19)
+                .strafeRight(21)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                    robot.AutoPIDControl(RobotHardware.BOTTOM + 300, "L");
+                })
+                .forward(12)
                 .build();
 
         TrajectorySequence middleTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .back(0.25)
-                .strafeRight(13)
+                .strafeLeft(13)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                    robot.AutoPIDControl(RobotHardware.BOTTOM + 300, "L");
+                })
+                .forward(12)
                 .build();
 
         TrajectorySequence rightTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .back(0.25)
-                .strafeRight(39)
+                .strafeLeft(39)
+                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                    robot.AutoPIDControl(RobotHardware.BOTTOM + 300, "L");
+                })
+                .forward(12)
                 .build();
 
 
         //TRAJECTORY FOLLOWED
         drive.followTrajectorySequence(preloadDeliver);
-        cycles(1,  drive, robot);
         if (tagOfInterest == null || tagOfInterest.id == LEFT) { //LEFT parking: ID #1
             drive.followTrajectorySequence(leftTOI);
         } else if (tagOfInterest.id == MIDDLE) { //MIDDLE parking: ID #2
@@ -241,27 +278,27 @@ public class BTBSCycleMid extends LinearOpMode {
         telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
     }
 
-    public void cycles(int numCycles, SampleMecanumDrive drive, RobotHardware robot) {
-        AtomicInteger stack = new AtomicInteger();
-        TrajectorySequence cycles = drive.trajectorySequenceBuilder(preloadEnd)
-                .lineToLinearHeading(new Pose2d(-57, 12, Math.toRadians(180)))
-                // goes to cone stack ^
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.PIDControl(coneStack[stack.intValue()], robot.getLiftAvg()); })
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.8);; })
-                // picks up stuff
-                .waitSeconds(0.5)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
-                .waitSeconds(0.1)
-                .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
-                .waitSeconds(0.4)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0); })
-                .build();
-
-        for (int i = 0; i < numCycles; i++) {
-            drive.followTrajectorySequence(cycles);
-            stack.getAndIncrement();
-        }
-
-        cycleEnd = cycles.end();
-    }
+//    public void cycles(int numCycles, SampleMecanumDrive drive, RobotHardware robot) {
+//        AtomicInteger stack = new AtomicInteger();
+//        TrajectorySequence cycles = drive.trajectorySequenceBuilder(preloadEnd)
+//                .lineToLinearHeading(new Pose2d(-57, 12, Math.toRadians(180)))
+//                // goes to cone stack ^
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.PIDControl(coneStack[stack.intValue()], robot.getLiftAvg()); })
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(1);; })
+//                // picks up stuff
+//                .waitSeconds(0.5)
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
+//                .waitSeconds(0.1)
+//                .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
+//                .waitSeconds(0.4)
+//                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0.8); })
+//                .build();
+//
+//        for (int i = 0; i < numCycles; i++) {
+//            drive.followTrajectorySequence(cycles);
+//            stack.getAndIncrement();
+//        }
+//
+//        cycleEnd = cycles.end();
+//    }
 }

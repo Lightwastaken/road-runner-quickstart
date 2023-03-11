@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode.config;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -44,6 +45,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.opencv.core.Mat;
 
 import java.util.ArrayList;
 
@@ -94,7 +96,7 @@ public class RobotHardware {
     public static final int BOTTOM = 0;
     public static final int GROUND_JUNC = 49;
     public static final int LOW_JUNC = 975;
-    public static final int MID_JUNC = 1700;
+    public static final int MID_JUNC = 1900;
     public static final int HIGH_JUNC = 2635;
     public static final double OUTTAKE_SPEED = 30 * 5281.1 / 60; //RPM * ENCODER TICKS PER REV / 60
     static final double COUNTS_PER_MOTOR_REV = 5281.1;    // eg: TETRIX Motor Encoder
@@ -287,7 +289,7 @@ public class RobotHardware {
     }
 
     public void AutoPIDControl(double reference, String state) {
-       double runTimePID = System.currentTimeMillis();
+       long runTimePID = System.currentTimeMillis();
        int miltime = 0;
        if(state.equals("L")){
            miltime = 800;
@@ -295,9 +297,12 @@ public class RobotHardware {
            miltime = 1500;
        } else if(state.equals("H")){
            miltime = 2000;
+       } else  if(state.equals("CS1")){
+           miltime = 800;
        }
-       while (runTimePID - System.currentTimeMillis() < miltime){
+       for(long currTime = System.currentTimeMillis(); Math.abs((runTimePID - currTime)) < miltime; currTime = System.currentTimeMillis()) {
            PIDControl(reference, getLiftAvg());
+
        }
     }
 

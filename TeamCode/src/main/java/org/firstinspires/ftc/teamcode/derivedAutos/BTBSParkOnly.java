@@ -38,7 +38,6 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.ArrayList;
 
-@Disabled
 @Autonomous(name="Blue terminal blue substation park", group="Pushbot")
 public class BTBSParkOnly extends LinearOpMode {
     public static Pose2d preloadEnd;
@@ -93,7 +92,7 @@ public class BTBSParkOnly extends LinearOpMode {
             }
         });
 
-        Pose2d start = new Pose2d(-36, 60, Math.toRadians(0));
+        Pose2d start = new Pose2d(-33, 60, Math.toRadians(90));
         drive.setPoseEstimate(start);
 
         telemetry.setMsTransmissionInterval(50);
@@ -181,40 +180,26 @@ public class BTBSParkOnly extends LinearOpMode {
         }
 
         TrajectorySequence preloadDeliver = drive.trajectorySequenceBuilder(start)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
-                    robot.claw.setPosition(1);
-                })
-                .strafeLeft(12)
-                .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
-                //
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.AutoPIDControl(RobotHardware.MID_JUNC, "M"); })
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.claw.setPosition(0);})
-                // preload ^
-                .waitSeconds(0.5)
-                .lineToLinearHeading(new Pose2d(-57, 12, Math.toRadians(180)))
-                // goes to cone stack ^
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> { robot.PIDControl(200, robot.getLiftAvg()); })
-
-                // picks up stuff
-                .waitSeconds(0.5)
-                .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
+                .strafeLeft(8)
+                .back(50)
                 .build();
 
         preloadEnd = preloadDeliver.end();
 
 
         TrajectorySequence leftTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .strafeLeft(19)
+                .strafeRight(30)
+                .forward(5)
                 .build();
 
         TrajectorySequence middleTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .back(0.25)
-                .strafeRight(13)
+                .forward(5)
                 .build();
 
         TrajectorySequence rightTOI = drive.trajectorySequenceBuilder(preloadEnd)
-                .back(0.25)
-                .strafeRight(39)
+                .back(2)
+                .strafeLeft(34)
+                .forward(5)
                 .build();
 
 

@@ -106,7 +106,7 @@ public class teleop extends LinearOpMode {
 
             // r = close, l = open
             if (gamepad1.left_stick_x > 0.5) {
-                robot.claw.setPosition(0.70);
+                robot.claw.setPosition(0.9);
             }else if (gamepad1.left_stick_x < -0.5) {
                 robot.claw.setPosition(1);
             }
