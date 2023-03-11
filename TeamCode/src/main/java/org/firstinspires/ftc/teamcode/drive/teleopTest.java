@@ -3,6 +3,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.config.RobotHardware;
@@ -15,7 +16,8 @@ public class teleopTest extends LinearOpMode {
     /* Declare OpMode members. */
     // Use a Pushbot's hardware
     RobotHardware robot = new RobotHardware(this);
-
+    Gamepad currentGamepad = new Gamepad();
+    Gamepad previousGamepad = new Gamepad();
 
     @Override
     public void runOpMode() {
@@ -43,7 +45,8 @@ public class teleopTest extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-
+            previousGamepad.copy(currentGamepad);
+            currentGamepad.copy(gamepad1);
 
             // Run wheels in POV mode (note: The joystick goes negative when pushed forwards, so negate it)
             // In this mode the Left stick moves the robot fwd and back, the Right stick turns left and right.
@@ -120,13 +123,33 @@ public class teleopTest extends LinearOpMode {
                 robot.claw.setPosition(1);
             }
 
-            if (gamepad1.right_bumper) {
-                robot.PIDControl(robot.targetPosition,robot.getLiftAvg());
+//            if (gamepad1.right_bumper) {
+//                if(count == 0) {
+//                     robot.PIDControl(robot.targetPosition, robot.getLiftAvg());
+//                     count++;
+//                 }
+//                 if (count == 1){
+//                      robot.PIDControl(robot.MID_JUNC, robot.getLiftAvg());
+//                      count++;
+//                 } if(count == 2){
+//                    robot.PIDControl(robot.HIGH_JUNC, robot.getLiftAvg());
+//                    count = 0;
+//                 }
+//                count++;
+//            } else if (gamepad1.right_trigger > 0.1) {
+//                robot.PIDControl(30,robot.getLiftAvg());
+//            } else {
+//                robot.lift(0);
+//            }
+
+            if (!previousGamepad.right_bumper && currentGamepad.right_bumper) {
+                robot.PIDControl(robot.setTargetPos(), robot.getLiftAvg());
             } else if (gamepad1.right_trigger > 0.1) {
-                robot.PIDControl(30,robot.getLiftAvg());
+                robot.PIDControl(30, robot.getLiftAvg());
             } else {
                 robot.lift(0);
             }
+
 
 //            if (gamepad1.dpad_down) {
 //                robot.initialTime = System.currentTimeMillis();

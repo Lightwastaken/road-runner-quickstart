@@ -91,9 +91,9 @@ public class RobotHardware {
 //    public static  double TOP_OUTTAKE_POSITION = 1230;
     public static final int BOTTOM = 0;
     public static final int GROUND_JUNC = 49;
-    public static final int LOW_JUNC = 1100;
-    public static final int MID_JUNC = 1955;
-    public static final int HIGH_JUNC = 2770;
+    public static final int LOW_JUNC = 975;
+    public static final int MID_JUNC = 1700;
+    public static final int HIGH_JUNC = 2635;
     public static final double OUTTAKE_SPEED = 30 * 5281.1 / 60; //RPM * ENCODER TICKS PER REV / 60
     static final double COUNTS_PER_MOTOR_REV = 5281.1;    // eg: TETRIX Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 1.0;     // This is < 1.0 if geared UP
@@ -121,8 +121,15 @@ public class RobotHardware {
 
     public static double p = 4.22;
     public static double i = 0.00001;
-    public static double d = 0;
+    public static double d = 0.0001;
 
+    public enum liftState {
+        GROUND,
+        LOW,
+        MEDIUM,
+        HIGH
+    }
+    liftState state = liftState.GROUND;
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
     public RobotHardware(LinearOpMode opmode) {
@@ -251,10 +258,6 @@ public class RobotHardware {
         RB.setPower(speed);
     }
 
-    public boolean isChassisVeloZero() {
-        return LF.getVelocity() == 0 && LB.getVelocity() == 0 && RF.getVelocity() == 0 && RB.getVelocity() == 0;
-    }
-
     public void lift(double power){
         RTL.setPower(power);
         LTL.setPower(power);
@@ -281,6 +284,21 @@ public class RobotHardware {
         LTL.setVelocity(output);
     }
 
+    public void AutoPIDControl(double reference, String state) {
+       double runTimePID = System.currentTimeMillis();
+       int miltime = 0;
+       if(state.equals("L")){
+           miltime = 800;
+       }else if(state.equals("M")){
+           miltime = 1500;
+       } else if(state.equals("H")){
+           miltime = 2000;
+       }
+       while (runTimePID - System.currentTimeMillis() < miltime){
+           PIDControl(reference, getLiftAvg());
+       }
+    }
+
 
 
 
@@ -300,11 +318,11 @@ public class RobotHardware {
 
     }
     public void lifA() {
-        if(getLiftAvg() < 700){
-            PIDControl(LOW_JUNC,getLiftAvg());
-        } else if(getLiftAvg() < 1000){
+         double inTime = System.currentTimeMillis();
+        if(getLiftAvg() < 1300 && System.currentTimeMillis() - inTime < 1000){
+        } else if(getLiftAvg() < 2000 && System.currentTimeMillis() - inTime < 1700){
             PIDControl(MID_JUNC, getLiftAvg());
-        } else if(getLiftAvg() > 1100){
+        } else if(getLiftAvg() > 1100 && System.currentTimeMillis() - inTime < 2500){
             PIDControl(HIGH_JUNC, getLiftAvg());
         }
     }
@@ -325,12 +343,33 @@ public class RobotHardware {
             }
         }
     }
+
+
     public double getLiftAvg(){
         return (RTL.getCurrentPosition() + LTL.getCurrentPosition())/ 2;
     }
 
     public boolean modeNameContains(String str) {
         return getClass().getName().contains(str);
+    }
+
+    public double setTargetPos() {
+        switch (state) {
+            case LOW:
+                targetPosition = LOW_JUNC;
+                state = liftState.MEDIUM;
+            case MEDIUM:
+                targetPosition = MID_JUNC;
+                state = liftState.HIGH;
+            case HIGH:
+                targetPosition = HIGH_JUNC;
+                state = liftState.GROUND;
+            default:
+                targetPosition = GROUND_JUNC;
+                state = liftState.LOW;
+        }
+
+        return targetPosition;
     }
 }
 
