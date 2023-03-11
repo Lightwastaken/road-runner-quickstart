@@ -13,9 +13,10 @@ public class MyClass {
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(52.48180821614297, 52.48180821614297, Math.toRadians(180), Math.toRadians(180), 24)
+                .setConstraints(52.48180821614297, 52.48180821614297, Math.toRadians(180), Math.toRadians(180), 12)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(-35, 60.0, Math.toRadians(0)))
+                        drive.trajectorySequenceBuilder(new Pose2d(-33, 60.0, Math.toRadians(90)))
+                                .strafeLeft(2)
                                 .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
                                 // preload [ not implmented]
                                 .waitSeconds(0.5)
@@ -23,6 +24,7 @@ public class MyClass {
                                 // goes to cone stack ^
                                 .waitSeconds(0.5)
                                 .lineToLinearHeading(new Pose2d(-34,12,Math.toRadians(45)))
+                                .waitSeconds(0.5)
                                 .build()
 
                 );
